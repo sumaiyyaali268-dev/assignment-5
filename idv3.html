@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Assignment 3 – Interactive Visualizations by Sumaiyya Ali</title>
+
+  <!-- Libraries -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Styles -->
+  <style>
+    :root{
+      --bg:#f6f8fa;--panel:#fff;--muted:#6b7280;--text:#1f2937;
+      --brand:#1f77b4;--ring:#e5e7eb;
+    }
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0;font-family:'Segoe UI',Roboto,sans-serif;
+      background:var(--bg);color:var(--text);
+    }
+    .topnav{
+      position:sticky;top:0;z-index:50;background:#fff;
+      border-bottom:1px solid var(--ring);
+      display:flex;gap:.5rem;justify-content:center;padding:.75rem 1rem;
+    }
+    .nav-btn{
+      border:1px solid var(--ring);background:#fff;color:var(--brand);
+      padding:.5rem .9rem;border-radius:.6rem;font-weight:600;
+      text-decoration:none;transition:all .15s;
+    }
+    .nav-btn:hover{background:#f3f4f6;}
+    .container{max-width:1100px;margin:auto;padding:1.25rem;}
+    .page-title{text-align:center;font-size:2rem;margin:.8rem 0 .2rem;}
+    .subtitle{text-align:center;color:var(--muted);margin:0 0 1.2rem;}
+    section{
+      background:var(--panel);border:1px solid var(--ring);border-radius:14px;
+      padding:1.25rem;margin:1rem auto 2rem;max-width:1000px;
+      box-shadow:0 6px 16px rgba(0,0,0,.04);
+    }
+    .section-title{border-left:4px solid var(--brand);padding-left:.6rem;margin:.2rem 0 1rem;}
+    .stack{display:flex;flex-direction:column;align-items:center;gap:.75rem;}
+    .info{
+      margin-top:.5rem;background:#e8f4fc;color:#2c3e50;padding:12px 14px;
+      border-radius:10px;max-width:800px;text-align:center;border:1px solid #d7e9f8;
+    }
+    canvas,svg{width:100%;height:auto;background:#eef4f7;border-radius:10px;}
+    .btn,.select{
+      border:1px solid var(--ring);background:#fff;color:var(--brand);
+      font-weight:600;padding:.5rem .9rem;border-radius:.6rem;cursor:pointer;
+    }
+    .btn:hover,.select:hover{background:#f3f4f6;}
+    footer{
+      text-align:center;padding:1rem 0;background:#fff;border-top:1px solid var(--ring);
+      color:var(--muted);font-size:.9rem;
+    }
+    footer strong{color:var(--brand);}
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="nav-btn" href="#chart1">Chart 1</a>
+    <a class="nav-btn" href="#chart2">Chart 2</a>
+    <a class="nav-btn" href="#chart3">Chart 3</a>
+    <a class="nav-btn" href="#chart4">Chart 4</a>
+    <a class="nav-btn" href="#chart5">Chart 5</a>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Assignment 3 – Interactive Visualizations by Sumaiyya Ali</h1>
+    <p class="subtitle">Presentation 1</p>
+  </div>
+
+  <!-- Chart 1 -->
+  <section id="chart1">
+    <h3 class="section-title">Chart 1: Branching Word Network</h3>
+    <div class="stack">
+      <svg id="network" width="700" height="500"></svg>
+      <div class="info" id="meaningBox1"><strong>Tip:</strong> Click a node to expand and see its meaning.</div>
+    </div>
+  </section>
+
+  <!-- Chart 2 -->
+  <section id="chart2">
+    <h3 class="section-title">Chart 2: Probability Density Function</h3>
+    <div class="stack">
+      <canvas id="pdfChart"></canvas>
+      <button class="btn" id="toggleOverlap">Toggle Overlap</button>
+      <div class="info" id="infoBox2" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- Chart 3 -->
+  <section id="chart3">
+    <h3 class="section-title">Chart 3: Optimised Route — Singapore Journey</h3>
+    <div class="stack">
+      <canvas id="sgRoute" width="900" height="500"></canvas>
+      <div>
+        <button class="btn" id="restart">Restart Journey</button>
+        <select class="select" id="speed">
+          <option value="slow">Slow</option>
+          <option value="medium" selected>Medium</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div class="info" id="infoBox3"><strong>Story:</strong> Starting from Jurong West — planning an optimal route across Singapore.</div>
+    </div>
+  </section>
+
+  <!-- Chart 4 -->
+  <section id="chart4">
+    <h3 class="section-title">Chart 4: Singapore’s Multicultural Food Harmony</h3>
+    <div class="stack">
+      <svg id="cuisineVenn" viewBox="0 0 600 400" width="900" height="600">
+        <circle id="chinese" cx="220" cy="200" r="120" fill="#e74c3c" opacity="0.6"/>
+        <circle id="malay"   cx="380" cy="200" r="120" fill="#f1c40f" opacity="0.6"/>
+        <circle id="indian"  cx="300" cy="120" r="120" fill="#27ae60" opacity="0.6"/>
+        <text x="200" y="340" text-anchor="middle" font-size="16" fill="#e74c3c">Chinese</text>
+        <text x="400" y="340" text-anchor="middle" font-size="16" fill="#f1c40f">Malay</text>
+        <text x="300" y="50"  text-anchor="middle" font-size="16" fill="#27ae60">Indian</text>
+      </svg>
+      <div class="info" id="infoBox4"><strong>Hover or click</strong> to explore cuisines and overlaps.</div>
+    </div>
+  </section>
+
+  <!-- Chart 5 -->
+  <section id="chart5">
+    <h3 class="section-title">Chart 5: Social Media Popularity Over Time</h3>
+    <div class="stack">
+      <canvas id="socialChart"></canvas>
+      <div class="info"><strong>Hover</strong> to explore each platform’s trend.</div>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 <strong>Sumaiyya Ali</strong> — Interactive Data Visualization Assignment
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    /* ========= Chart 1: D3 Network ========= */
+    (() => {
+      const svg = d3.select("#network");
+      const width = +svg.attr("width");
+      const height = +svg.attr("height");
+      const meaning = document.getElementById("meaningBox1");
+
+      const nodes = [
+        { id: "Change", color: "#f1c40f", meaning: "The heart of transformation", size: 26 },
+        { id: "Conflict", color: "#e74c3c", meaning: "Where transformation begins", size: 18 },
+        { id: "Destruction", color: "#c0392b", meaning: "Breaking down of the old", size: 18 },
+        { id: "Awareness", color: "#9b59b6", meaning: "Realization through reflection", size: 18 },
+        { id: "Unity", color: "#3498db", meaning: "Harmony after chaos", size: 18 },
+        { id: "Hope", color: "#2ecc71", meaning: "Light after struggle", size: 18 },
+        { id: "Rebirth", color: "#16a085", meaning: "New beginnings", size: 18 }
+      ];
+      const links = nodes.slice(1).map(n => ({ source: "Change", target: n.id }));
+
+      const sim = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(130))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+      const link = svg.append("g").selectAll("line")
+        .data(links).join("line").attr("stroke", "#aaa").attr("stroke-width", 2);
+
+      const node = svg.append("g").selectAll("circle")
+        .data(nodes).join("circle")
+        .attr("r", d => d.size).attr("fill", d => d.color)
+        .attr("stroke", "#333").attr("stroke-width", 1.5).style("cursor", "pointer")
+        .call(d3.drag().on("start", dragstart).on("drag", dragged).on("end", dragend));
+
+      const label = svg.append("g").selectAll("text")
+        .data(nodes).join("text")
+        .attr("text-anchor", "middle").attr("dy", 4).style("font-size","12px").text(d => d.id);
+
+      sim.on("tick", () => {
+        link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+        node.attr("cx", d => d.x).attr("cy", d => d.y);
+        label.attr("x", d => d.x).attr("y", d => d.y + 4);
+      });
+
+      node.on("click", function(e, d){
+        node.transition().duration(300).attr("r", n => n.size).attr("stroke-width",1.5);
+        d3.select(this).transition().duration(500).attr("r", d.size * 1.7).attr("stroke-width",3);
+        meaning.innerHTML = `<strong>"${d.id}"</strong> → ${d.meaning}`;
+      });
+
+      function dragstart(e, d){ if(!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+      function dragged(e, d){ d.fx = e.x; d.fy = e.y; }
+      function dragend(e, d){ if(!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }
+    })();
+
+    /* ========= Chart 2: Probability Density ========= */
+    (() => {
+      function pdf(x, m, s){ return (1/(s*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((x-m)/s)**2); }
+      const xs = [], a = [], b = [];
+      for(let v=-2; v<=5; v+=0.1){ const r=+v.toFixed(1); xs.push(r); a.push(pdf(r,0.8,0.9)); b.push(pdf(r,2.3,0.9)); }
+      const overlap = a.map((v,i)=>Math.min(v,b[i]));
+      const ctx = document.getElementById("pdfChart").getContext("2d");
+      const info = document.getElementById("infoBox2");
+
+      const chart = new Chart(ctx,{
+        type:"line",
+        data:{ labels:xs, datasets:[
+          { label:"Overlap", data:overlap, backgroundColor:"rgba(128,128,128,0.3)", fill:true, borderColor:"transparent" },
+          { label:"Group A", data:a, borderColor:"#f39c12", fill:false, tension:0.3, pointRadius:0 },
+          { label:"Group B", data:b, borderColor:"#1f77b4", fill:false, tension:0.3, pointRadius:0 }
+        ]},
+        options:{
+          responsive:true,
+          plugins:{ title:{ display:true, text:"Probability Density of Exam Performance" } },
+          onClick:(e)=>{
+            const p = chart.getElementsAtEventForMode(e,"nearest",{intersect:true},false);
+            if(!p.length) return;
+            const {datasetIndex,index}=p[0];
+            info.style.display="block";
+            info.innerHTML = `<b>${chart.data.datasets[datasetIndex].label}</b><br>x=${xs[index]}<br>y=${chart.data.datasets[datasetIndex].data[index].toFixed(3)}`;
+          }
+        }
+      });
+
+      document.getElementById("toggleOverlap").onclick=()=>{ chart.data.datasets[0].hidden = !chart.data.datasets[0].hidden; chart.update(); };
+    })();
+
+    /* ========= Chart 3: SG Journey (Canvas) ========= */
+    (() => {
+      const c = document.getElementById("sgRoute");
+      const ctx = c.getContext("2d");
+      let z=1, ox=0, oy=0, dragging=false, dragStart={x:0,y:0}, prog=0, intv, speed=600;
+      const info = document.getElementById("infoBox3");
+
+      const route = [
+        {x:60,y:440,name:"Jurong West"},{x:150,y:380,name:"Clementi"},
+        {x:220,y:340,name:"Buona Vista"},{x:290,y:300,name:"Botanic Gardens"},
+        {x:360,y:260,name:"Orchard"},{x:430,y:220,name:"Dhoby Ghaut"},
+        {x:510,y:180,name:"Raffles Place"},{x:590,y:150,name:"Marina Bay"}
+      ];
+      const blocks = [
+        {x:250,y:260,w:80,h:80,label:"Road Closed"},
+        {x:420,y:130,w:60,h:60,label:"No Access"}
+      ];
+      const story = [
+        "Start Jurong West","Passing Clementi","Detour near Buona Vista",
+        "At Botanic Gardens","Reaching Orchard","Near Dhoby Ghaut",
+        "Raffles Place view","Arrived Marina Bay"
+      ];
+
+      function draw(){
+        ctx.save();
+        ctx.setTransform(z,0,0,z,ox,oy);
+        ctx.clearRect(-ox/z,-oy/z,c.width/z,c.height/z);
+
+        // grid
+        ctx.strokeStyle="#e9ecef"; ctx.lineWidth=1;
+        for(let i=-1000;i<2000;i+=25){ ctx.beginPath(); ctx.moveTo(i,-1000); ctx.lineTo(i,2000); ctx.stroke(); }
+        for(let j=-1000;j<2000;j+=25){ ctx.beginPath(); ctx.moveTo(-1000,j); ctx.lineTo(2000,j); ctx.stroke(); }
+
+        // obstacles
+        blocks.forEach(b=>{
+          ctx.fillStyle="rgba(231,76,60,0.3)"; ctx.fillRect(b.x,b.y,b.w,b.h);
+          ctx.strokeStyle="#e74c3c"; ctx.strokeRect(b.x,b.y,b.w,b.h);
+          ctx.fillStyle="#c0392b"; ctx.font="12px Segoe UI"; ctx.fillText(b.label,b.x+5,b.y+b.h/2);
+        });
+
+        // route
+        ctx.beginPath(); ctx.lineWidth=2; ctx.strokeStyle="#1f77b4";
+        ctx.moveTo(route[0].x, route[0].y);
+        for(let i=1;i<=prog;i++) ctx.lineTo(route[i].x, route[i].y);
+        ctx.stroke();
+
+        // labels
+        ctx.fillStyle="#2c3e50"; ctx.font="13px Segoe UI";
+        route.forEach(p=> ctx.fillText(p.name, p.x-20, p.y-10));
+
+        // markers
+        ctx.fillStyle="#27ae60"; ctx.beginPath(); ctx.arc(route[0].x,route[0].y,6,0,Math.PI*2); ctx.fill();
+        const end = route[route.length-1];
+        ctx.fillStyle="#e74c3c"; ctx.beginPath(); ctx.arc(end.x,end.y,6,0,Math.PI*2); ctx.fill();
+
+        // traveler
+        const p = route[prog];
+        if(p){ ctx.fillStyle="#f39c12"; ctx.beginPath(); ctx.arc(p.x,p.y,8,0,Math.PI*2); ctx.fill(); }
+        ctx.restore();
+      }
+
+      function animate(){ draw(); if(prog<route.length-1){ prog++; info.innerHTML = `<strong>Story:</strong> ${story[prog]}`; } else clearInterval(intv); }
+      function start(){ prog=0; clearInterval(intv); draw(); info.innerHTML = `<strong>Story:</strong> ${story[0]}`; intv = setInterval(animate, speed); }
+
+      // zoom
+      c.addEventListener("wheel", e=>{ e.preventDefault(); z += e.deltaY < 0 ? 0.1 : -0.1; z = Math.max(0.8, Math.min(2, z)); draw(); });
+      // pan
+      c.addEventListener("mousedown", e=>{ dragging=true; dragStart.x = e.offsetX - ox; dragStart.y = e.offsetY - oy; c.style.cursor="grabbing"; });
+      window.addEventListener("mouseup", ()=>{ dragging=false; c.style.cursor="grab"; });
+      window.addEventListener("mousemove", e=>{ if(!dragging) return; ox = e.offsetX - dragStart.x; oy = e.offsetY - dragStart.y; draw(); });
+
+      document.getElementById("speed").onchange = e => { speed = e.target.value==="slow" ? 1000 : e.target.value==="fast" ? 300 : 600; };
+      document.getElementById("restart").onclick = start;
+
+      draw();
+    })();
+
+    /* ========= Chart 4: Venn Interactions ========= */
+    (() => {
+      const info = document.getElementById("infoBox4");
+      const svg  = document.getElementById("cuisineVenn");
+      const circles = svg.querySelectorAll("circle");
+
+      const C = {
+        chinese: { name:"Chinese 🇨🇳", info:"Chicken Rice, Char Kway Teow, Dim Sum" },
+        malay:   { name:"Malay 🇲🇾",   info:"Nasi Lemak, Satay, Rendang" },
+        indian:  { name:"Indian 🇮🇳",  info:"Roti Prata, Fish Head Curry, Briyani" },
+        fusion:  { name:"Fusion 🇸🇬",  info:"Laksa, Curry Noodles, Hawker mixes" },
+        cm:      { name:"Chinese + Malay", info:"Peranakan/Nyonya: Laksa, Kueh" },
+        mi:      { name:"Malay + Indian",  info:"Mamak: Roti John, Mee Goreng" },
+        ci:      { name:"Chinese + Indian",info:"Chilli Chicken, Manchurian" }
+      };
+
+      circles.forEach(el=>{
+        el.addEventListener("mouseenter", ()=>{
+          info.innerHTML = `<b>${C[el.id].name}</b><br>${C[el.id].info}`;
+          el.setAttribute("opacity","0.9");
+        });
+        el.addEventListener("mouseleave", ()=>{
+          info.innerHTML = "<strong>Hover or click</strong> to explore cuisines and overlaps.";
+          el.setAttribute("opacity","0.6");
+        });
+        el.addEventListener("click", ()=>{ info.innerHTML = `<b>${C[el.id].name}</b><br>${C[el.id].info}`; });
+      });
+
+      // Simple overlap hitboxes (approximate)
+      svg.addEventListener("click",(e)=>{
+        const r = svg.getBoundingClientRect();
+        const x = e.clientX - r.left;
+        const y = e.clientY - r.top;
+
+        // center (all three)
+        if (x>260 && x<340 && y>140 && y<200) { info.innerHTML = `<b>${C.fusion.name}</b><br>${C.fusion.info}`; return; }
+        // Chinese + Malay
+        if (x>260 && x<340 && y>200 && y<250) { info.innerHTML = `<b>${C.cm.name}</b><br>${C.cm.info}`; return; }
+        // Malay + Indian
+        if (x>330 && x<380 && y>140 && y<180) { info.innerHTML = `<b>${C.mi.name}</b><br>${C.mi.info}`; return; }
+        // Chinese + Indian
+        if (x>240 && x<290 && y>140 && y<180) { info.innerHTML = `<b>${C.ci.name}</b><br>${C.ci.info}`; return; }
+      });
+    })();
+
+    /* ========= Chart 5: Social Media Popularity ========= */
+    (() => {
+      const ctx = document.getElementById("socialChart").getContext("2d");
+      new Chart(ctx,{
+        type:"line",
+        data:{
+          labels:[2005,2008,2011,2014,2017,2020,2023,2025],
+          datasets:[
+            { label:'Facebook',   data:[0,4,9,10,9,7,5,4],  fill:true, backgroundColor:'rgba(66,103,178,0.4)',  borderColor:'rgba(66,103,178,1)',  tension:0.3 },
+            { label:'Instagram',  data:[0,0,2,6,9,10,9,8], fill:true, backgroundColor:'rgba(225,48,108,0.4)', borderColor:'rgba(225,48,108,1)', tension:0.3 },
+            { label:'Twitter / X',data:[0,1,4,6,7,6,5,4],  fill:true, backgroundColor:'rgba(29,161,242,0.4)', borderColor:'rgba(29,161,242,1)',  tension:0.3 },
+            { label:'TikTok',     data:[0,0,0,1,5,9,10,10],fill:true, backgroundColor:'rgba(0,0,0,0.3)',      borderColor:'rgba(0,0,0,1)',      tension:0.3 }
+          ]
+        },
+        options:{
+          responsive:true,
+          plugins:{
+            legend:{ position:'top', labels:{ font:{ size:14 } } },
+            title:{ display:true, text:'Global Social Media Usage Frequency (2005–2025)' },
+            tooltip:{ callbacks:{ label:(c)=>`${c.dataset.label}: Popularity Index ${c.parsed.y}` } }
+          },
+          scales:{
+            x:{ title:{ display:true, text:'Year' }, grid:{ color:'rgba(0,0,0,0.08)' } },
+            y:{ title:{ display:true, text:'Popularity Index (0–10)' }, min:0, max:10, grid:{ color:'rgba(0,0,0,0.08)' } }
+          },
+          interaction:{ mode:'nearest', intersect:false }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

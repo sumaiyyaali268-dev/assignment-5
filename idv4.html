@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attack vs Model Performance — Interactive Heatmap</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #fafafa;
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 26px;
+        margin-bottom: 4px;
+        color: #111;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-bottom: 2px solid #39ff14;
+        padding-bottom: 6px;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 15px;
+        color: #555;
+        max-width: 780px;
+        margin-bottom: 12px;
+    }
+
+    #heatmap {
+        background: #ffffff;
+        border: 1px solid #e3e3e3;
+        border-radius: 20px;
+        padding: 18px;
+    }
+
+    .cell {
+        stroke: #dcdcdc;
+        stroke-width: 1px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        rx: 4;
+    }
+
+    .cell:hover {
+        stroke: #39ff14;
+        stroke-width: 2px;
+        filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
+    }
+
+    .rowLabel {
+        font-size: 13px;
+        font-weight: 600;
+        text-anchor: end;
+        fill: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .groupLabel {
+        font-size: 15px;
+        font-weight: bold;
+        fill: #000;
+        text-anchor: end;
+    }
+
+    .colLabel {
+        font-size: 13px;
+        font-weight: bold;
+        fill: #222;
+    }
+
+    .guide-line {
+        stroke: #eee;
+        stroke-width: 1px;
+    }
+
+    .tooltip {
+        position: absolute;
+        background: white;
+        border: 2px solid #39ff14;
+        padding: 8px 12px;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0;
+        font-size: 14px;
+        box-shadow: 0 0 12px rgba(57, 255, 20, 0.25);
+    }
+
+    .highlight {
+        stroke: #39ff14;
+        stroke-width: 3px;
+        filter: drop-shadow(0 0 12px rgba(57, 255, 20, 0.5));
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Attack vs Model Performance</h1>
+<div class="subtitle">
+    This heatmap visualizes model robustness (%) under different adversarial attacks. 
+    Darker colors indicate higher performance. Hover any cell to see exact values.
+</div>
+
+<div id="heatmap"></div>
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+
+// ==================== DATA ====================
+const rawData = [
+{Attack:"No Attack",ERM:94.85,DA:94.21,PGDT:84.38,TRADES:80.42,MART:81.54,RS:89.45,IBP:48.4,PRL:93.82,TandT:94.23},
+{Attack:"TIFGSM",ERM:35.1,DA:33,PGDT:65.7,TRADES:62.9,MART:69.1,RS:45.4,IBP:40.2,PRL:34,TandT:92.8},
+{Attack:"MIFGSM",ERM:0,DA:0,PGDT:50.9,TRADES:51.9,MART:50.5,RS:5.8,IBP:38.1,PRL:0,TandT:92.8},
+{Attack:"DIFGSM",ERM:1,DA:0,PGDT:51.75,TRADES:50.5,MART:53.6,RS:4.1,IBP:38.1,PRL:3.1,TandT:92.8},
+{Attack:"VMIFGSM",ERM:0,DA:0,PGDT:51.1,TRADES:50.9,MART:51.9,RS:4.1,IBP:38.1,PRL:0,TandT:93.9},
+{Attack:"TPGD",ERM:38.1,DA:39.2,PGDT:69.3,TRADES:69.1,MART:70.1,RS:48.5,IBP:50,PRL:28.9,TandT:91.8},
+{Attack:"FGSM",ERM:29.9,DA:25.8,PGDT:57.95,TRADES:54.6,MART:61.9,RS:28.9,IBP:38.1,PRL:25.8,TandT:93.8},
+{Attack:"RFGSM",ERM:0,DA:0,PGDT:49.15,TRADES:50.4,MART:48.5,RS:3.7,IBP:38.1,PRL:0,TandT:90},
+{Attack:"BIM",ERM:0,DA:0,PGDT:52,TRADES:57.2,MART:47.4,RS:2.1,IBP:38.1,PRL:0,TandT:90.7},
+{Attack:"FAB",ERM:1,DA:2.1,PGDT:43,TRADES:46.4,MART:40.2,RS:5.3,IBP:38.1,PRL:4.1,TandT:90.1},
+{Attack:"CW",ERM:0,DA:0,PGDT:32.2,TRADES:35.1,MART:29.9,RS:1,IBP:40.2,PRL:1,TandT:92.9},
+{Attack:"UPGD",ERM:0,DA:0,PGDT:49.85,TRADES:50.5,MART:49.8,RS:5.1,IBP:38.1,PRL:0,TandT:93.8},
+{Attack:"FFGSM",ERM:19.6,DA:23.7,PGDT:60.55,TRADES:55.7,MART:66,RS:33,IBP:42.3,PRL:29.9,TandT:92.8},
+{Attack:"Jitter",ERM:11.3,DA:12.4,PGDT:48.15,TRADES:47.4,MART:49.5,RS:34,IBP:39.2,PRL:24.7,TandT:90.7},
+{Attack:"PGD",ERM:0,DA:0,PGDT:57.4,TRADES:54.6,MART:60.8,RS:7.2,IBP:40.2,PRL:0,TandT:91.8},
+{Attack:"EOTPGD",ERM:0,DA:0,PGDT:50.1,TRADES:50.3,MART:50.5,RS:3,IBP:38.1,PRL:0,TandT:90.7},
+{Attack:"APGD",ERM:0,DA:0,PGDT:48.4,TRADES:51,MART:46.4,RS:1,IBP:38.1,PRL:0,TandT:90.7},
+{Attack:"NIFGSM",ERM:0,DA:0,PGDT:57.95,TRADES:56.7,MART:59.8,RS:7.2,IBP:38.1,PRL:1,TandT:92.8},
+{Attack:"SiniFGSM",ERM:4.1,DA:1,PGDT:59,TRADES:56.7,MART:61.9,RS:23.7,IBP:38.1,PRL:12.4,TandT:93.7},
+{Attack:"VNIFGSM",ERM:0,DA:0,PGDT:50.45,TRADES:53,MART:48.5,RS:5.1,IBP:38.1,PRL:0,TandT:92.9},
+{Attack:"APGDT",ERM:0,DA:0,PGDT:40.9,TRADES:44.3,MART:38.1,RS:0,IBP:38.1,PRL:0,TandT:88.7},
+{Attack:"Square",ERM:0,DA:1,PGDT:50.4,TRADES:54,MART:47.4,RS:3.1,IBP:38.1,PRL:2.1,TandT:88.08},
+{Attack:"Add Gaussian Noise",ERM:25.8,DA:43.3,PGDT:79.1,TRADES:78.4,MART:80.4,RS:74.2,IBP:42.3,PRL:45.4,TandT:87.6},
+{Attack:"OnePixel",ERM:79.4,DA:83.5,PGDT:78.05,TRADES:74.2,MART:82.5,RS:83.5,IBP:42.5,PRL:80.4,TandT:89.7},
+{Attack:"Pixle",ERM:0,DA:0,PGDT:12.55,TRADES:11.3,MART:14.4,RS:1,IBP:10.3,PRL:0,TandT:17.5},
+{Attack:"PGDL2",ERM:1,DA:0,PGDT:35.8,TRADES:36.1,MART:36.1,RS:5.2,IBP:36.1,PRL:0,TandT:92.9}
+];
+
+// ==================== GROUPS ====================
+const groups = [
+    {name:"No Attack", attacks:["No Attack"]},
+    {name:"Gradient Attacks", attacks:[
+        "TIFGSM","MIFGSM","DIFGSM","VMIFGSM","TPGD","FGSM",
+        "RFGSM","BIM","FAB","PGD","EOTPGD","APGD","NIFGSM",
+        "SiniFGSM","VNIFGSM","Jitter","FFGSM"
+    ]},
+    {name:"Noise Attacks", attacks:["Add Gaussian Noise","Square"]},
+    {name:"Pixel Attacks", attacks:["OnePixel","Pixle"]},
+    {name:"Other Attacks", attacks:["CW","PGDL2"]}
+];
+
+const orderedAttacks = groups.flatMap(g => g.attacks);
+const models = ["ERM","DA","PGDT","TRADES","MART","RS","IBP","PRL","TandT"];
+
+// ==================== LAYOUT ====================
+const margin = {top: 130, right: 40, bottom: 60, left: 200};
+const cellSize = 36;
+
+const width = models.length * cellSize + margin.left + margin.right;
+const height = orderedAttacks.length * cellSize + margin.top + margin.bottom;
+
+const svg = d3.select("#heatmap")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+const colorScale = d3.scaleSequential()
+    .domain([0,100])
+    .interpolator(d3.interpolateYlOrBr);
+
+const tooltip = d3.select("#tooltip");
+
+// ==================== GROUP LABELS ====================
+let rowStart = 0;
+
+groups.forEach(g => {
+    const blockHeight = g.attacks.length * cellSize;
+    const centerY = margin.top + rowStart * cellSize + blockHeight / 2;
+
+    svg.append("text")
+        .attr("class", "groupLabel")
+        .attr("x", margin.left - 60)
+        .attr("y", centerY)
+        .attr("opacity", 0)
+        .text(g.name)
+        .transition()
+            .duration(600)
+            .attr("opacity", 1);
+
+    rowStart += g.attacks.length;
+});
+
+// ==================== GUIDE LINES ====================
+orderedAttacks.forEach((att, i) => {
+    svg.append("line")
+        .attr("class","guide-line")
+        .attr("x1", margin.left)
+        .attr("x2", width - margin.right)
+        .attr("y1", margin.top + i*cellSize + cellSize/2)
+        .attr("y2", margin.top + i*cellSize + cellSize/2);
+});
+
+// ==================== ROW LABELS ====================
+svg.selectAll(".rowLabel")
+    .data(orderedAttacks)
+    .enter()
+    .append("text")
+    .attr("class","rowLabel")
+    .attr("x", margin.left - 10)
+    .attr("y", (d,i) => margin.top + i*cellSize + cellSize/1.6)
+    .attr("opacity", 0)
+    .text(d => d)
+    .transition()
+        .duration(600)
+        .attr("opacity",1);
+
+// ==================== COLUMN LABELS ====================
+svg.selectAll(".colLabel")
+    .data(models)
+    .enter()
+    .append("text")
+    .attr("class","colLabel")
+    .attr("opacity",0)
+    .attr("transform",(d,i)=>
+        `translate(${margin.left + i*cellSize + cellSize/2 + 5},
+                    ${margin.top - 45}) rotate(-90)`
+    )
+    .text(d=>d)
+    .transition()
+        .duration(600)
+        .attr("opacity",1);
+
+// ==================== CELLS + ANIMATION ====================
+const cellData = rawData.flatMap(row =>
+    models.map(model => ({
+        attack: row.Attack,
+        model,
+        value: row[model]
+    }))
+);
+
+svg.selectAll(".cell")
+    .data(cellData)
+    .enter()
+    .append("rect")
+    .attr("class","cell")
+    .attr("x", d => margin.left + models.indexOf(d.model)*cellSize)
+    .attr("y", d => margin.top + orderedAttacks.indexOf(d.attack)*cellSize + 10)
+    .attr("width", cellSize)
+    .attr("height", 0)
+    .style("opacity",0)
+    .transition()
+        .duration(800)
+        .delay((d,i)=> i*8)
+        .attr("y", d => margin.top + orderedAttacks.indexOf(d.attack)*cellSize)
+        .attr("height", cellSize)
+        .style("opacity",1)
+        .style("fill", d => colorScale(d.value));
+
+// ==================== TOOLTIP ====================
+svg.selectAll(".cell")
+    .on("mouseover", function(event,d){
+        d3.select(this).classed("highlight",true);
+        tooltip.style("opacity",1)
+            .html(`<b>${d.attack}</b><br>${d.model}: <b>${d.value}%</b>`)
+            .style("left",(event.pageX+12)+"px")
+            .style("top",(event.pageY-20)+"px");
+    })
+    .on("mouseout",function(){
+        d3.select(this).classed("highlight",false);
+        tooltip.style("opacity",0);
+    });
+
+</script>
+
+</body>
+</html>
